@@ -33,8 +33,40 @@ services:
           memory: 350M
     restart: always
 
+  mongo:
+    image: mongo:4.2.2
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+    deploy:
+      resources:
+        limits:
+          memory: 700M
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: Honda12345*
+      MONGO_INITDB_DATABASE: my-database
+
+  mongo-express:
+    image: mongo-express
+    ports:
+      - 8081:8081
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    restart: always
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: Honda12345*
+      ME_CONFIG_MONGODB_URL: mongodb://admin:Honda12345*@mongo:27017/
+
 volumes:
   jenkins_home:
+#  jenkins_data:
+  mongodb_data:
 #  sonarqube_conf:
 #  sonarqube_data:
 #  sonarqube_extensions:
