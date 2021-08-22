@@ -63,6 +63,17 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: Honda12345*
       ME_CONFIG_MONGODB_URL: mongodb://admin:Honda12345*@mongo:27017/
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    restart: always
+
 volumes:
   jenkins_home:
 #  jenkins_data:
@@ -71,4 +82,3 @@ volumes:
 #  sonarqube_data:
 #  sonarqube_extensions:
 #  sonarqube_bundled-plugins:
-#  jenkins_data:
