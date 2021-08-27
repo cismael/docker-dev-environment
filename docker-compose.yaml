@@ -2,12 +2,13 @@ version: '3.9'
 
 services:
 
+  # Jenkins ##################################################################################
   jenkins:
     build:
       context: ./jenkins
     ports:
-      - "5555:8080"
-      - "50000:50000"
+      - "${JENKINS_PORT_1}:8080"
+      - "${JENKINS_PORT_2}:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
 #      - /var/run/docker.sock:/var/run/docker.sock
@@ -16,27 +17,35 @@ services:
         limits:
           memory: 3G
     restart: always
+    depends_on:
+      - "sonarqube"
 
+  # Sonarqube ##################################################################################
   sonarqube:
-    user: 1004:1004
+    #user: 1004:1004
     image: sonarqube:8.9.2-community
     ports:
-      - "9000:9000"
-#    volumes:
-#      - sonarqube_conf:/opt/sonarqube/conf
-#      - sonarqube_data:/opt/sonarqube/data
-#      - sonarqube_extensions:/opt/sonarqube/extensions
-#      - sonarqube_bundled-plugins:/opt/sonarqube/lib/bundled-plugins
+      - "${SONARQUBE_PORT}:9000"
+    volumes:
+      - sonarqube_conf:/opt/sonarqube/conf
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_bundled-plugins:/opt/sonarqube/lib/bundled-plugins
     deploy:
       resources:
         limits:
-          memory: 350M
+          memory: 3G
     restart: always
 
+  # MongoDB ##################################################################################
   mongo:
     image: mongo:5.0.2
     ports:
-      - 27017:27017
+      - "${MONGODB_PORT}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     volumes:
       - mongodb_data:/data/db
     deploy:
@@ -44,25 +53,90 @@ services:
         limits:
           memory: 700M
     restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: Honda12345*
-      MONGO_INITDB_DATABASE: my-database
-
+    
   mongo-express:
     image: mongo-express
     ports:
-      - 8081:8081
+      - ${MONGO_EXPRESS_PORT}:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:${MONGODB_PORT}/
     deploy:
       resources:
         limits:
           memory: 350M
     restart: always
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: Honda12345*
-      ME_CONFIG_MONGODB_URL: mongodb://admin:Honda12345*@mongo:27017/
+    depends_on:
+      - "mongo"
 
+  # MariaDB ###################################################################################
+  mariadb:
+    image: mariadb:latest
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}    
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    deploy:
+      resources:
+        limits:
+          memory: 700M
+    restart: always
+
+  phpmyadmin:
+    image: phpmyadmin
+    ports:
+      - ${PHPMYADMIN_PORT}:80
+    environment:
+      - PMA_ARBITRARY=1
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    restart: always
+    depends_on:
+      - "mariadb"
+
+  # Alternative to phpmyadmin
+  adminer:
+    image: adminer
+    ports:
+      - ${ADMINER_PORT}:8080
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+    restart: always
+    depends_on:
+      - "mariadb"
+
+  # Kanboard ################################################################################
+  kanboard:
+    image: kanboard/kanboard:latest
+    ports:
+      - "${KANBOARD_PORT}:80"
+      #- "443:443"
+    environment:
+      DATABASE_URL: mysql://${KANBOARD_USER}:${KANBOARD_PASSWORD}@mariadb/${KANBOARD_DATABASE}
+    volumes:
+      - kanboard_data:/var/www/app/data
+      - kanboard_plugins:/var/www/app/plugins
+      - kanboard_ssl:/etc/nginx/ssl
+    deploy:
+      resources:
+        limits:
+          memory: 700M
+    restart: always
+    depends_on:
+      - "mariadb"
+
+  # RabbitMQ ###############################################################################
   rabbitmq:
     image: rabbitmq:3-management-alpine
     ports:
@@ -75,10 +149,25 @@ services:
     restart: always
 
 volumes:
+  # Jenkins volume #########################################################################
   jenkins_home:
-#  jenkins_data:
+
+  # Sonarqube volumes ######################################################################
+  sonarqube_conf:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_bundled-plugins:
+
+  # MongoDB volume #########################################################################
   mongodb_data:
-#  sonarqube_conf:
-#  sonarqube_data:
-#  sonarqube_extensions:
-#  sonarqube_bundled-plugins:
+
+  # MySql volume ###########################################################################
+  mysql_data:
+
+  # MariaDb volume #########################################################################
+  mariadb_data:
+
+  # Kanboard volumes #######################################################################
+  kanboard_data:
+  kanboard_plugins:
+  kanboard_ssl:
