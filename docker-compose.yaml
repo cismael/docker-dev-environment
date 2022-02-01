@@ -43,7 +43,7 @@ services:
 
   # MongoDB ##################################################################################
   mongo:
-    image: mongo:5.0.5
+    image: mongo:5.0.6
     ports:
       - "${MONGODB_PORT}:27017"
     environment:
