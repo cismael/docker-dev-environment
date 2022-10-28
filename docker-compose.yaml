@@ -21,7 +21,7 @@ services:
   # Sonarqube ##################################################################################
   sonarqube:
     #user: 1004:1004
-    image: sonarqube:9.7.0-community
+    image: sonarqube:9.7.1-community
     ports:
       - "${SONARQUBE_PORT}:9000"
     environment:
