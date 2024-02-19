@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
 
@@ -11,7 +11,6 @@ services:
       - "${JENKINS_PORT_2}:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
-#      - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       resources:
         limits:
@@ -21,7 +20,7 @@ services:
   # Sonarqube ##################################################################################
   sonarqube:
     #user: 1004:1004
-    image: sonarqube:9.0.1-community
+    image: sonarqube:10.4-community
     ports:
       - "${SONARQUBE_PORT}:9000"
     environment:
@@ -43,7 +42,7 @@ services:
 
   # MongoDB ##################################################################################
   mongo:
-    image: mongo:5.0.2
+    image: mongo:7.0
     ports:
       - "${MONGODB_PORT}:27017"
     environment:
@@ -57,7 +56,7 @@ services:
         limits:
           memory: 700M
     restart: always
-    
+
   mongo-express:
     image: mongo-express:latest
     ports:
@@ -76,8 +75,8 @@ services:
 
   # PostGres ##################################################################################
   postgresql:
-    image: postgres:13.4
-    ports: 
+    image: postgres:16.2
+    ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -101,7 +100,7 @@ services:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${MARIADB_DATABASE}
       MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}    
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     volumes:
       - mariadb_data:/var/lib/mysql
     deploy:
