@@ -75,7 +75,7 @@ services:
 
   # PostGres ##################################################################################
   postgresql:
-    image: postgres:16.16
+    image: postgres:18.7
     ports:
       - "5432:5432"
     environment:
